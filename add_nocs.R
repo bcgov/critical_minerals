@@ -1,6 +1,4 @@
 library(tidyverse)
-#library(tidytext)
-#library(widyr)
 library(here)
 library(readxl)
 library(janitor)
@@ -11,12 +9,17 @@ conflicts_prefer(dplyr::filter)
 #functions-------------------------
 source(here("R","functions.R"))
 #mapping files----------------------
-job_to_noc <- read_csv(here("out", "job_to_noc.csv"), col_types = "c", locale = readr::locale(encoding = "UTF-8"))
-write_group_striped_excel(job_to_noc, "noc", here("out", "job_to_noc.xlsx"))
-nocs_to_names <- vroom::vroom(here("data", "noc_2021_version_1.0_elements.csv"))|>
+job_to_noc <- read_csv(here("data",
+                                "mapping",
+                                "add_new_job_titles_to_this_file.csv"),
+                       locale = readr::locale(encoding = "UTF-8"))
+nocs_to_names <- vroom::vroom(here("data", "mapping", "noc_2021_version_1.0_elements.csv"))|>
   select(noc=starts_with("Code"), noc_name=starts_with("Class"))|>
-  distinct()|>
-  mutate(noc=str_pad(noc, 5, pad = "0"))
+  distinct()
+
+left_join(job_to_noc, nocs_to_names, by = "noc")|>
+  write_group_striped_excel("noc", here("out", "job_to_noc.xlsx"))
+
 #north island----------------------
 north_island <- read_excel(here("data", "North Island.xlsx"), skip = 2)|>
   clean_names()|>

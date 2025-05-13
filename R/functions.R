@@ -12,9 +12,17 @@ clean_text_column <- function(data, column) {
     )
 }
 
-clean_strings <- function(df, cols) {
-  df %>%
-    mutate(across(all_of(cols), ~ ifelse(is.na(.), NA_character_, str_squish(as.character(.)))))
+# clean_strings <- function(df, cols) {
+#   df %>%
+#     mutate(across(all_of(cols), ~ ifelse(is.na(.), NA_character_, str_squish(as.character(.)))))
+# }
+
+clean_key <- function(x) {
+  x %>%
+    as.character() %>%         # Convert factors or other types to character
+    iconv(to = "UTF-8") %>%    # Normalize encoding
+    stringr::str_squish() %>%  # Remove excess whitespace
+    tolower()                  # Normalize case
 }
 
 mine_type <- function(mine_name){
@@ -53,7 +61,6 @@ agg_and_write <- function(tbbl){
     group_by(non_standard_job_title, location, mine_type, noc)|>
     summarize(staff=sum(staff, na.rm = TRUE), .groups = "drop")|>
     ungroup()|>
-    mutate(noc=as.character(noc))|>
     left_join(nocs_to_names)|>
     arrange(noc)|>
     select(non_standard_job_title, staff, location, mine_type, noc, noc_name)|>
@@ -61,8 +68,10 @@ agg_and_write <- function(tbbl){
 }
 
 map_nocs <- function(jobs_df, mapping_df) {
-  jobs_df <- clean_strings(jobs_df, c("non_standard_job_title", "mine_type", "location"))
-  mapping_df <- clean_strings(mapping_df, c("non_standard_job_title", "mine_type", "location"))
+  jobs_df <- jobs_df|>
+    mutate(across(c(non_standard_job_title, mine_type, location), clean_key))
+  mapping_df <- mapping_df|>
+    mutate(across(c(non_standard_job_title, mine_type, location), clean_key))
   fuzzy_left_join(
     jobs_df, mapping_df,
     by = c("non_standard_job_title" = "non_standard_job_title",
