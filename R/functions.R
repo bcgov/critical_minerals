@@ -12,6 +12,11 @@ clean_text_column <- function(data, column) {
     )
 }
 
+clean_strings <- function(df, cols) {
+  df %>%
+    mutate(across(all_of(cols), ~ ifelse(is.na(.), NA_character_, str_squish(as.character(.)))))
+}
+
 mine_type <- function(mine_name){
   read_excel(here("data", "Upcoming Mine Data - Employment.xlsx"), skip=1)|>
     clean_names()|>
@@ -42,14 +47,44 @@ write_group_striped_excel <- function(data, group_col, file, sheet_name = "Sheet
   saveWorkbook(wb, file = file, overwrite = TRUE)
 }
 
-join_and_write <- function(tbbl){
+agg_and_write <- function(tbbl){
   file_name <- paste(deparse(substitute(tbbl)), "nocs.xlsx", sep="_")
-  left_join(tbbl, job_to_noc)|>
+  tbbl|>
     group_by(non_standard_job_title, location, mine_type, noc)|>
     summarize(staff=sum(staff, na.rm = TRUE), .groups = "drop")|>
     ungroup()|>
+    mutate(noc=as.character(noc))|>
     left_join(nocs_to_names)|>
     arrange(noc)|>
     select(non_standard_job_title, staff, location, mine_type, noc, noc_name)|>
     write_group_striped_excel("noc", here("out",file_name))
 }
+
+map_nocs <- function(jobs_df, mapping_df) {
+  jobs_df <- clean_strings(jobs_df, c("non_standard_job_title", "mine_type", "location"))
+  mapping_df <- clean_strings(mapping_df, c("non_standard_job_title", "mine_type", "location"))
+  fuzzy_left_join(
+    jobs_df, mapping_df,
+    by = c("non_standard_job_title" = "non_standard_job_title",
+           "mine_type" = "mine_type",
+           "location"  = "location"),
+    match_fun = list(
+      `==`, #exact matches on non_standard_job_title
+      function(x, y) {
+        is.na(y) | x == y #matches nas or mine_type exactly
+      },
+      function(x, y) {
+        is.na(y) | x == y #matches nas or location exactly
+      }
+    )
+  )%>%
+    select(non_standard_job_title = non_standard_job_title.x,
+           staff = staff,
+           mine_type = mine_type.x,
+           location  = location.x,
+           noc)
+}
+
+
+
+

@@ -1,0 +1,131 @@
+non_standard_job_title,mine_type,location,noc
+controller,NA,NA,10010
+hr safety environmental manager,NA,NA,10011
+accountant,NA,NA,11100
+purchasing agents,NA,NA,12102
+secretary clerk,NA,NA,14100
+clerk,NA,NA,14100
+secretary,NA,NA,14100
+chief metallurgist,NA,NA,21109
+senior metallurgist,NA,NA,21109
+metallurgist,NA,NA,21109
+metallurgists,NA,NA,21109
+safety environmental professional,NA,NA,21120
+survey technician,NA,NA,21203
+surveyor,NA,NA,21203
+mechanical engineer,NA,mill,21301
+electrical engineer,NA,mill,21310
+engineer,NA,mill,21322
+process control engineer,NA,mill,21322
+tire roads engineer,NA,mine,21330
+hydrological engineer,NA,mine,21330
+chief engineer,NA,mine,21330
+senior mine engineer,NA,mine,21330
+junior mine engineer,NA,mine,21330
+drilling blasting engineer,NA,mine,21330
+senior geotechnical engineer,NA,mine,21330
+geotechnical engineer,NA,mine,21330
+mine engineer,NA,mine,21330
+mine projects engineer,NA,mine,21330
+mine services engineer,NA,mine,21330
+geologists and mining engineers,NA,mine,21331
+mine geologists,NA,mine,21331
+senior geologists,NA,mine,21331
+assayer,NA,NA,22101
+chief assayer,NA,NA,22101
+sample prep,NA,NA,22101
+metallurgist tech,NA,NA,22101
+metallurgical tech,NA,NA,22101
+ore grade technicians,NA,NA,22101
+mill instrumentation,NA,mill,22312
+janitor,NA,NA,65312
+mill superintendent,NA,mill,92010
+maintenance supervisors,NA,mill,92010
+electrical supervisor,,mill,92010
+maintenance superintendent,NA,mill,92010
+mill superintendent,NA,mill,92010
+mill maintenance foreman,NA,mill,92010
+mill foreman,NA,mill,92010
+mill maintenance planner,NA,mill,92010
+mill maintenance supervisor,NA,mill,92010
+tailings supervisor,NA,mill,92010
+maintenance planners,NA,mill,92010
+mobile equipment mtce superintendent,NA,mine,82020
+drilling blasting foreman,NA,mine,82020
+auxiliary equipment supervisor,NA,mine,82020
+maintenance shift supervisor electrical,NA,mine,82020
+maintenance shift supervisor mechanical,NA,mine,82020
+mine maintenance general supervisor,NA,mine,82020
+mine services foreman,NA,mine,82020
+loading hauling foreman,NA,mine,82020
+supervision,NA,mine,82020
+welders,NA,mill,72106
+mill electrician,NA,mill,72201
+electrician instrumentation,NA,mill,72201
+electric operator,NA,mine,72201
+electric maintenance,NA,mine,72201
+cable crew,NA,mine,72201
+mill mechanics,NA,mill,72400
+mill maintenance apprentices,NA,mill,72400
+mechanic,NA,mill,72400
+maintenance,NA,mine,72401
+truck maintenance,NA,mine,72401
+hydraulic shovel e maintenance,NA,mine,72401
+front end loader maintenance,NA,mine,72401
+grader maintenance,NA,mine,72401
+track dozer maintenance,NA,mine,72401
+rubber tire dozer maintenance,NA,mine,72401
+water truck maintenance,NA,mine,72401
+presplit drill maintenance,NA,mine,72401
+excavator maintenance,NA,mine,72401
+hydraulic shovel d maintenance,NA,mine,72401
+pac hvac water,NA,mill,72402
+operators,NA,mine,73400
+truck operator,NA,mine,73400
+track dozer operator,NA,mine,73400
+grader operator,NA,mine,73400
+hydraulic shovel e operator,NA,mine,73400
+rubber tire dozer operator,NA,mine,73400
+water truck operator,NA,mine,73400
+excavator operator,NA,mine,73400
+front end loader operator,NA,mine,73400
+hydraulic shovel d operator,NA,mine,73400
+presplit drill operator,NA,mine,73400
+drillers,open pit,mine,73402
+blasters,open pit,mine,73402
+warehouseman,NA,NA,75101
+fuel supply team,NA,NA,75101
+general manager,NA,NA,80010
+mine manager,NA,NA,80010
+process superintendent,NA,NA,92010
+operations supervisors,NA,NA,92010
+shift foreman,NA,NA,92010
+crusher operator,NA,mill,93100
+equipment operator,NA,mill,93100
+grinding operator,NA,mill,93100
+control room operator,NA,mill,93100
+flotation operator,NA,mill,93100
+leaching operator,NA,mill,93100
+adr operator,NA,mill,93100
+refining operator,NA,mill,93100
+filtration operator,NA,mill,93100
+tailing operator,NA,mill,93100
+tailing equipment operator,NA,mill,93100
+grinding regrinding operator,NA,mill,93100
+leaching precip operator,NA,mill,93100
+mag sep operator,NA,mill,93100
+product handling operator,NA,mill,93100
+reagent operator,NA,mill,93100
+process control techs,NA,mill,93100
+crusher helper,NA,mill,95100
+grinding helper,NA,mill,95100
+flotation helper,NA,mill,95100
+leaching helper,NA,mill,95100
+adr helper,NA,mill,95100
+refining helper,NA,mill,95100
+filtration helper,NA,mill,95100
+tailing helper,NA,mill,95100
+mechanic helper,NA,mill,95100
+electrician helper,NA,mill,95100
+helper,NA,mill,95100
+laborer,NA,mill,95100
