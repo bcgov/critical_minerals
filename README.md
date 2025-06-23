@@ -10,22 +10,17 @@ critical_minerals
 
 ### Usage
 
-Describe data being used (links), and how to run. Eg:
+1) When new data arrives from mine, you need to write code to clean data into a tibble with columns
+- non_standard_job_title (the job titles from the mine that do not match the standard job titles) 
+- mine_type (open pit or underground)
+- location (mine or mill)
+- staff (the number of people with that job title at that location)
 
-There are four core scripts that are required for the analysis, they need to be run in order:
+2) run the code, inspect the output.  The mapping likely failed in a majority of the cases.
 
--   01\_clean.R
--   02\_analysis.R
--   03\_visualize.R
--   04\_output.R
+3) add the new job titles to the mapping file: data/mapping/add_new_job_titles_to_this_file.csv
 
-#### Example
-
-This is a basic example which shows you how to solve a common problem:
-
-``` r
-## basic example code
-```
+4) re-run the code, inspect the output.  Repeat until the mapping is complete.
 
 ### Project Status
 
