@@ -16,11 +16,66 @@ job_to_noc <- read_csv(here("data",
 nocs_to_names <- vroom::vroom(here("data", "mapping", "noc_2021_version_1.0_elements.csv"))|>
   select(noc=starts_with("Code"), noc_name=starts_with("Class"))|>
   distinct()
-
+#write the mapping to a pretty excel file
 left_join(job_to_noc, nocs_to_names, by = "noc")|>
   write_group_striped_excel("noc", here("out", "job_to_noc.xlsx"))
 
+#brucejack------------------
+
+brucejack_meta <- tibble(
+  mine_type = "underground",
+  commodities = "gold silver"
+)
+
+brucejack <- read_excel(here("data", "Labour Estimate - Newmont Red Chris and Brucejack.xlsx"), skip = 3, sheet = "Labour Estimate - Brucejack")|>
+  clean_names()|>
+  clean_text_column(category)|>
+  clean_text_column(position)|>
+  fill(category, .direction = "down")|>
+  filter(category %in% c("plant administration", "operations", "maintenance", "mining"))|>
+  mutate(category=case_when(
+    str_detect(category, "plant administration") ~ "admin",
+    category %in% c("operations", "maintenance") ~ "mill",
+    TRUE ~ "mine"
+  ))|>
+  rename(location=category, staff=contains("staff"), non_standard_job_title=position)|>
+  mutate(staff=as.numeric(staff))|>
+  na.omit()|>
+  crossing(brucejack_meta)|>
+  map_nocs(job_to_noc)|>
+  arrange(desc(staff))
+
+agg_and_write(brucejack)
+
+#red chris------------------
+
+red_chris_meta <- tibble(
+  mine_type = "open pit",
+  commodities = "gold copper"
+)
+
+red_chris <- read_excel(here("data", "Labour Estimate - Newmont Red Chris and Brucejack.xlsx"), skip = 3, sheet = "Labour Estimate - Red Chris")|>
+  clean_names()|>
+  clean_text_column(category)|>
+  clean_text_column(position)|>
+  fill(category, .direction = "down")|>
+  filter(category %in% c("plant administration", "operations", "maintenance", "mining"))|>
+  mutate(category=case_when(
+    str_detect(category, "plant administration") ~ "admin",
+    category %in% c("operations", "maintenance") ~ "mill",
+    TRUE ~ "mine"
+  ))|>
+  rename(location=category, staff=contains("staff"), non_standard_job_title=position)|>
+  mutate(staff=as.numeric(staff))|>
+  na.omit()|>
+  crossing(red_chris_meta)|>
+  map_nocs(job_to_noc)
+
+agg_and_write(red_chris)
+
 #north island----------------------
+north_island_meta <- mine_type("North Island")
+
 north_island <- read_excel(here("data", "North Island.xlsx"), skip = 2)|>
   clean_names()|>
   clean_text_column(position)|>
@@ -29,16 +84,18 @@ north_island <- read_excel(here("data", "North Island.xlsx"), skip = 2)|>
   mutate(category=if_else(is.na(staff), position, NA_character_))|>
   fill(category, .direction = "down")|>
   na.omit()|>
-  mutate(mine_type=mine_type("North Island"))|>
-  mutate(location=case_when(str_detect(category, "admin") ~ "other",
+  mutate(location=case_when(str_detect(category, "admin") ~ "admin",
                             category %in% c("operations", "maintenance") ~ "mill",
                             TRUE ~ "mine"))|>
-  select(non_standard_job_title=position, staff, mine_type, location)|>
+  select(non_standard_job_title=position, staff, location)|>
+  crossing(north_island_meta)|>
   map_nocs(job_to_noc)
 
 agg_and_write(north_island)
 
 #baptiste mine------------------
+
+baptiste_meta <- mine_type("Baptiste Nickel Project")
 
 baptiste_mine <- read_excel(here("data","Baptiste Nickel Project.xlsx"), sheet = "Mining Breakdown", skip = 3, n_max = 95)|>
   clean_names()|>
@@ -46,13 +103,12 @@ baptiste_mine <- read_excel(here("data","Baptiste Nickel Project.xlsx"), sheet =
   clean_text_column(non_standard_job_title)|>
   mutate(across(contains("year"), ~ as.numeric(.x)))|>
   filter(!str_detect(non_standard_job_title, "\\b(subtotal|total|absenteeism|annual)\\b"))|>
-  mutate(location="mine", mine_type=mine_type("Baptiste Nickel Project"))|>
-  na.omit()|>
+  mutate(location="mine")|>
+  crossing(baptiste_meta)|>
   pivot_longer(cols = contains("Year"), names_to = "year", values_to = "staff")|>
-  group_by(location, mine_type, non_standard_job_title)|>
+  group_by(location, mine_type, commodities, non_standard_job_title)|>
   summarize(staff=round(mean(staff, na.rm = TRUE)), .groups = "drop")|>
   filter(staff>0)|>
-  mutate(mine_type=mine_type("Baptiste Nickel Project"))|>
   map_nocs(job_to_noc)
 
 #baptiste mill------------------
@@ -70,9 +126,10 @@ baptiste_mill <- baptiste_mill|>
   clean_text_column(non_standard_job_title)|>
   mutate(across(contains("phase"), ~ as.numeric(.x)))|>
   filter(!str_detect(non_standard_job_title, "\\b(subtotal|total)\\b"))|>
-  mutate(location="mill", mine_type=mine_type("Baptiste Nickel Project"))|>
+  mutate(location="mill")|>
+  crossing(baptiste_meta)|>
   pivot_longer(cols = contains("phase"), names_to = "year", values_to = "staff")|>
-  group_by(location, mine_type, non_standard_job_title)|>
+  group_by(location, mine_type, commodities, non_standard_job_title)|>
   summarize(staff=round(mean(staff, na.rm = TRUE)), .groups = "drop")|>
   filter(staff>0)|>
   map_nocs(job_to_noc)
@@ -81,4 +138,6 @@ baptiste <- bind_rows(baptiste_mine, baptiste_mill)|>
   arrange(location, noc)
 
 agg_and_write(baptiste)
+
+
 

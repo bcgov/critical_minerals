@@ -1,21 +1,13 @@
-clean_spaces <- function(x) {
-  gsub("\\s+", " ", trimws(x))
-}
-
 clean_text_column <- function(data, column) {
   data %>%
     mutate(
       {{ column }} := {{ column }} %>%
         str_to_lower() %>%                      # lowercase
         str_replace_all("[^a-z]"," ") |>
-        clean_spaces()
-    )
+        trimws() |>
+        gsub("\\s+", " ", x = _)
+       )
 }
-
-# clean_strings <- function(df, cols) {
-#   df %>%
-#     mutate(across(all_of(cols), ~ ifelse(is.na(.), NA_character_, str_squish(as.character(.)))))
-# }
 
 clean_key <- function(x) {
   x %>%
@@ -30,7 +22,8 @@ mine_type <- function(mine_name){
     clean_names()|>
     filter(upcoming_mine==mine_name)|>
     clean_text_column(open_pit_or_underground_mine)|>
-    pull(open_pit_or_underground_mine)
+    clean_text_column(commodities)|>
+    select(mine_type=open_pit_or_underground_mine, commodities)
 }
 
 write_group_striped_excel <- function(data, group_col, file, sheet_name = "Sheet1") {
@@ -58,13 +51,13 @@ write_group_striped_excel <- function(data, group_col, file, sheet_name = "Sheet
 agg_and_write <- function(tbbl){
   file_name <- paste(deparse(substitute(tbbl)), "nocs.xlsx", sep="_")
   tbbl|>
-    group_by(non_standard_job_title, location, mine_type, noc)|>
+    group_by(non_standard_job_title, commodities, location, mine_type, noc)|>
     summarize(staff=sum(staff, na.rm = TRUE), .groups = "drop")|>
     ungroup()|>
     left_join(nocs_to_names)|>
     arrange(noc)|>
-    select(non_standard_job_title, staff, location, mine_type, noc, noc_name)|>
-    write_group_striped_excel("noc", here("out",file_name))
+    select(commodities, mine_type, location, staff, non_standard_job_title, noc, noc_name)|>
+    write_group_striped_excel("noc", here("out", file_name))
 }
 
 map_nocs <- function(jobs_df, mapping_df) {
@@ -90,10 +83,7 @@ map_nocs <- function(jobs_df, mapping_df) {
     select(non_standard_job_title = non_standard_job_title.x,
            staff = staff,
            mine_type = mine_type.x,
+           commodities,
            location  = location.x,
            noc)
 }
-
-
-
-

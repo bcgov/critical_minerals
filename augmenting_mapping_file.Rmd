@@ -1,0 +1,125 @@
+---
+title: "Adding new non-standard job titles to the mapping file"
+output:
+  html_document:
+    code_folding: hide
+date: "2025-05-20"
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(readxl)
+library(janitor)
+library(openxlsx)
+library(fuzzyjoin)
+library(conflicted)
+library(tufte)
+conflicts_prefer(dplyr::filter)
+source(here("R", "functions.R"))
+```
+
+## Introduction
+
+The goal is to ascertain whether or not the anticipated labour demand for
+prospective new mines is in line with the historic composition of occupations (NOCs) within
+the mining industry.  The main problem we face is that mines do not use standard job titles,
+which necessitates manual mapping to NOCs, documented below.
+
+## Cleaning the data file:
+
+> All happy families are alike; each unhappy family is unhappy in its
+> own way. `r tufte::quote_footer('Leo Tolstoy')`
+
+> Tidy datasets are all alike, but every messy dataset is messy in its
+> own way. `r tufte::quote_footer('Hadley Wickham')`
+
+Each dataset supplied by the mines needs to be massaged into a clean format, where
+every row is an observation, every column is a variable, and every cell is a single value. For the output, 
+we require a dataset with columns non_standard_job_title, staff, location (with values mine, mill, admin). Location is relevant because an "operator" in a mine has a different NOC code than an "operator" in a mill: the job title alone is not enough to categorize the job.  We also attach the mine type (underground, open pit, etc.) and the commodities mined (gold, copper, etc.).  This additional information allows us to create representative profiles (NOC proportions) for different mine types, which can be applied to total labour counts when a breakdown is not provided. 
+
+Here is the cleaning code for North Island mine, which was (fairly) tidy already.  The main thing we need to do is ascertain the location
+associated with each job title.  The location is important because the same job title in a mill and a mine may have different NOC codes.  For Northisle, the location is based on the headings in the provided Excel file. Specifically, if the heading contains the string "admin", the location is "admin". If the heading contains "operations" or "maintenance", the location is "mill". Otherwise, the location is "mine". 
+
+```{r, message=FALSE, warning=FALSE}
+#mapping files----------------------
+job_to_noc <- read_csv(here("data",
+                                "mapping",
+                                "add_new_job_titles_to_this_file.csv"),
+                       locale = readr::locale(encoding = "UTF-8"))
+
+nocs_to_names <- vroom::vroom(here("data", "mapping", "noc_2021_version_1.0_elements.csv"))|>
+  select(noc=starts_with("Code"), noc_name=starts_with("Class"))|>
+  distinct()
+
+#write the mapping to a pretty excel file
+left_join(job_to_noc, nocs_to_names, by = "noc")|>
+  write_group_striped_excel("noc", here("out", "job_to_noc.xlsx"))
+
+#north island----------------------
+north_island_meta <- mine_type("North Island")
+
+north_island <- read_excel(here("data", "North Island.xlsx"), skip = 2)|>
+  clean_names()|>
+  clean_text_column(position)|>
+  filter(!is.na(position),
+         !position %in% c("total", "head office"))|>
+  mutate(category=if_else(is.na(staff), position, NA_character_))|>
+  fill(category, .direction = "down")|>
+  na.omit()|>
+  mutate(location=case_when(str_detect(category, "admin") ~ "admin",
+                            category %in% c("operations", "maintenance") ~ "mill",
+                            TRUE ~ "mine"))|>
+  select(non_standard_job_title=position, staff, location)|>
+  crossing(north_island_meta)|>
+  map_nocs(job_to_noc)
+```
+
+Here is the messy data:
+
+![messy data](Screenshot from 2025-05-20 14-08-11.png)
+
+And here is the clean data:
+
+```{r}
+DT::datatable(north_island, rownames = FALSE)
+```
+
+## Note on Non-Standard Job Title Mapping
+
+Please note that all non-standard job titles in this file have already been mapped, as the file has undergone prior processing. In the case of a new file, it is likely that some job titles will not yet be mapped. The following outlines the procedure I use for incorporating new non-standard job titles into the mapping file:
+
+1) Initial Review: Examine the existing mapping file to determine whether the new non-standard job title closely resembles an already-mapped title. If it appears similar, verify its classification using the National Occupational Classification (NOC) website, and if appropriate, add it to the mapping file.
+
+2) No Clear Match: If no close match is found, or if the information on the NOC website does not align with the job title, consult ChatGPT for a recommendation. For example, you might ask: "For drillers and blasters in an open pit mine, what is the appropriate NOC 2021 code?"
+
+3) Verification of Suggestions: Confirm any NOC code suggested by ChatGPT using the official NOC website. Based on my experience:
+
+  - Approximately 50% of the time, ChatGPT provides a NOC code that is consistent with the textual description or example job titles listed under that code.
+
+  - Around 25% of the time, ChatGPT suggests a NOC code that does not exist.
+
+  - The remaining 25% of the time, the suggested code exists but is clearly not an appropriate match.
+
+4) Final Decision: If the suggested NOC code is appropriate, incorporate it into the mapping file. If the suggestion is incorrect, further clarification may be required. This can occasionally lead to a prolonged exchange involving correction of ChatGPT's errors and repeated refinements.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
