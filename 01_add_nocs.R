@@ -32,9 +32,9 @@ brucejack <- read_excel(here("data", "Labour Estimate - Newmont Red Chris and Br
   clean_text_column(category)|>
   clean_text_column(position)|>
   fill(category, .direction = "down")|>
-  filter(category %in% c("plant administration", "operations", "maintenance", "mining"))|>
+  filter(category %in% c("general and administrative", "plant administration", "operations", "maintenance", "mining"))|>
   mutate(category=case_when(
-    str_detect(category, "plant administration") ~ "admin",
+    category %in% c("general and administrative", "plant administration") ~ "admin",
     category %in% c("operations", "maintenance") ~ "mill",
     TRUE ~ "mine"
   ))|>
@@ -42,8 +42,7 @@ brucejack <- read_excel(here("data", "Labour Estimate - Newmont Red Chris and Br
   mutate(staff=as.numeric(staff))|>
   na.omit()|>
   crossing(brucejack_meta)|>
-  map_nocs(job_to_noc)|>
-  arrange(desc(staff))
+  map_nocs(job_to_noc)
 
 agg_and_write(brucejack)
 
@@ -59,9 +58,9 @@ red_chris <- read_excel(here("data", "Labour Estimate - Newmont Red Chris and Br
   clean_text_column(category)|>
   clean_text_column(position)|>
   fill(category, .direction = "down")|>
-  filter(category %in% c("plant administration", "operations", "maintenance", "mining"))|>
+  filter(category %in% c("general and administrative", "plant administration", "operations", "maintenance", "mining"))|>
   mutate(category=case_when(
-    str_detect(category, "plant administration") ~ "admin",
+    category %in% c("general and administrative", "plant administration") ~ "admin",
     category %in% c("operations", "maintenance") ~ "mill",
     TRUE ~ "mine"
   ))|>
@@ -80,9 +79,9 @@ north_island <- read_excel(here("data", "North Island.xlsx"), skip = 2)|>
   clean_names()|>
   clean_text_column(position)|>
   filter(!is.na(position),
-         !position %in% c("total", "head office"))|>
+         !position %in% c("total"))|>
   mutate(category=if_else(is.na(staff), position, NA_character_))|>
-  fill(category, .direction = "down")|>
+  fill(category, .direction = "downup")|>
   na.omit()|>
   mutate(location=case_when(str_detect(category, "admin") ~ "admin",
                             category %in% c("operations", "maintenance") ~ "mill",
@@ -134,8 +133,23 @@ baptiste_mill <- baptiste_mill|>
   filter(staff>0)|>
   map_nocs(job_to_noc)
 
-baptiste <- bind_rows(baptiste_mine, baptiste_mill)|>
-  arrange(location, noc)
+#baptiste owner team----------------
+
+baptiste_owner <- read_excel(here("data",
+                                 "Baptiste Nickel Project.xlsx"),
+                            sheet = "Owner Team - G&A Breakdown",
+                            skip = 5,
+                            col_names = c("non_standard_job_title", "staff", "phase1", "phase2", "onsite"))|>
+  filter(staff=="Total")|>
+  mutate(staff=(phase1+phase2)/2,
+         location="admin")|>
+  crossing(baptiste_meta)|>
+  select(-phase1, -phase2, -onsite)|>
+  map_nocs(job_to_noc)
+
+
+baptiste <- bind_rows(baptiste_owner, baptiste_mine, baptiste_mill)|>
+  arrange(noc)
 
 agg_and_write(baptiste)
 

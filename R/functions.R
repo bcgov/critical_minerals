@@ -37,7 +37,6 @@ write_group_striped_excel <- function(data, group_col, file, sheet_name = "Sheet
   group_vals <- data[[group_col]]
   group_change <- c(TRUE, group_vals[-1] != group_vals[-length(group_vals)])
   group_ids <- cumsum(group_change)
-
   for (i in seq_len(nrow(data))) {
     style <- if (group_ids[i] %% 2 == 1) stripe1 else stripe2
     excel_row <- start_row + i - 1
@@ -50,13 +49,24 @@ write_group_striped_excel <- function(data, group_col, file, sheet_name = "Sheet
 
 agg_and_write <- function(tbbl){
   file_name <- paste(deparse(substitute(tbbl)), "nocs.xlsx", sep="_")
-  tbbl|>
+
+  mapped <- tbbl|>
+    filter(!is.na(noc))
+  unmapped <- tbbl|>
+    filter(is.na(noc))|>
+    group_by(mine_type, commodities)|>
+    summarize(staff=sum(staff), non_standard_job_title="unmapped", .groups = "drop")|>
+    mutate(location="admin",
+           noc=-1)
+
+  bind_rows(mapped, unmapped)|>
     group_by(non_standard_job_title, commodities, location, mine_type, noc)|>
     summarize(staff=sum(staff, na.rm = TRUE), .groups = "drop")|>
     ungroup()|>
     left_join(nocs_to_names)|>
     arrange(noc)|>
     select(commodities, mine_type, location, staff, non_standard_job_title, noc, noc_name)|>
+    mutate(noc_name=if_else(is.na(noc_name), "unmapped", noc_name))|>
     write_group_striped_excel("noc", here("out", file_name))
 }
 
