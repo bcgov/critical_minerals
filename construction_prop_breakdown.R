@@ -8,40 +8,39 @@ construction <- read_excel(here("data", "Baptiste Nickel Project.xlsx"), sheet =
   filter(thing=="Overall Project")|>
   pivot_longer(cols = -thing, names_to = "month", values_to = "count")|>
   mutate(month=as.numeric(month),
-         divided_count=count/35,
-         division=list(1:35))|>
+         divided_count=count/420,
+         division=list(1:420))|>
   unnest(division)|>
   mutate(index=row_number())
 
 
 get_props <- function(tbbl, span){
  tbbl|>
-  mutate(year=ceiling(index/(1260/span)))|>
-  group_by(year)|>
-  summarize(count=sum(count))|>
+  mutate(month=ceiling(index/(15120/span)))|>
+  group_by(month)|>
+  summarize(count=sum(divided_count))|>
   mutate(prop=count/sum(count))
 }
 
-results <- tibble(span=seq(1.5, 5, .5),
+results <- tibble(span=seq(18, 60, 6),
                   construction=list(construction))|>
   mutate(props=map2(construction, span, get_props))|>
   select(span, props)|>
   unnest(props)|>
-  mutate(span= paste("Construction spanning", span, "years"),
-         year=as.character(year))
+  mutate(span= paste("Construction spanning", span, "months"))
 
-(ggplot(results, aes(as.character(year), prop)) +
-  geom_col() +
-  geom_label(aes(label = round(prop, 2))) +
-  facet_wrap(~span, scales = "free_y") +
+(plt <- ggplot(results, aes(month, prop)) +
+  geom_col(alpha=.5) +
+  facet_wrap(~span, nrow=2) +
   labs(
     title = "Proportion of construction workers by year",
-    x = "Year",
+    x = "Month",
     y = "Proportion of total construction workers"
   ) +
-  theme_minimal()) %>%
-  ggsave(here("out", "construction_prop_breakdown.svg"),
-               plot = ., bg = "white", width = 10, height = 6)
+  theme_minimal())
+
+ggsave(filename=here("out", "construction_prop_breakdown.svg"),
+               plot = plt, bg = "white", width = 10, height = 6)
 
 write_csv(results, "construction_props.csv")
 
